@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Digital Wallet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="centered-container">
+    <h2>My Wallet</h2>
+    <div id="userInfo"></div>
+    <div class="tx-list" id="transactions"></div>
+    <button onclick="window.location='deposit.html'">Deposit</button>
+    <button onclick="window.location='withdraw.html'">Withdraw</button>
+    <button onclick="window.location='transfer.html'">Transfer</button>
+    <button class="link-btn" onclick="logout()">Logout</button>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    if(!token) window.location = 'login.html';
+    async function fetchData() {
+      const res = await fetch('http://localhost:5000/api/me', {
+        headers: {Authorization: 'Bearer ' + token}
+      });
+      const user = await res.json();
+      document.getElementById('userInfo').innerHTML = `
+        <div class="card"><strong>Email:</strong> ${user.email}<br>
+        <strong>Balance:</strong> ₹${user.balance || 0}</div>
+      `;
+      const txRes = await fetch('http://localhost:5000/api/transactions', {
+        headers: {Authorization: 'Bearer ' + token}
+      });
+      const txs = await txRes.json();
+      document.getElementById('transactions').innerHTML = `
+        <strong>Transactions</strong>
+        <ul>
+          ${txs.map(tx => `<li>${tx.type} ₹${tx.amount} ${tx.to ? '→ '+tx.to : ''} <span style="color:#888;">${new Date(tx.date).toLocaleString()}</span></li>`).join('')}
+        </ul>
+      `;
+    }
+    function logout() {
+      localStorage.removeItem('token');
+      window.location = 'login.htmt';
+    }
+    fetchData();
+  </script>
+</body>
+</html>
